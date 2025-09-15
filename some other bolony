@@ -1,0 +1,218 @@
+from manim import *
+
+class RayPlaneIntersection(Scene):
+    def construct(self):
+        # Set transparent background
+        self.camera.background_color = "#00000000"
+        
+        # Title
+        title = Text("Ray-Plane Intersection", font_size=48)
+        title.to_edge(UP)
+        self.play(Write(title))
+        self.wait(0.5)
+        
+        # Step 1: Define the plane
+        plane_text = MathTex(r"\text{Floor plane: } y = 0", font_size=36)
+        plane_text.next_to(title, DOWN, buff=0.5)
+        self.play(Write(plane_text))
+        self.wait(1)
+        
+        # Step 2: Ray equation
+        ray_eq = MathTex(
+            r"\vec{p}(t) = \vec{O} + t\vec{d}",
+            font_size=42
+        )
+        ray_eq.next_to(plane_text, DOWN, buff=0.8)
+        self.play(Write(ray_eq))
+        self.wait(1)
+        
+        # Step 3: Component form
+        component_eq = MathTex(
+            r"y\text{-component: } O_y + td_y = 0",
+            font_size=38
+        )
+        component_eq.next_to(ray_eq, DOWN, buff=0.5)
+        self.play(Write(component_eq))
+        self.wait(1)
+        
+        # Step 4: Solve for t
+        solve_eq = MathTex(
+            r"t = -\frac{O_y}{d_y}",
+            font_size=44
+        )
+        solve_eq.next_to(component_eq, DOWN, buff=0.5)
+        solve_eq.set_color(YELLOW)
+        self.play(Write(solve_eq))
+        self.wait(1.5)
+        
+        # Fade out previous equations
+        self.play(
+            FadeOut(VGroup(plane_text, ray_eq, component_eq, solve_eq)),
+            run_time=1
+        )
+        
+        # Step 5: Conditions
+        conditions_title = Text("Validity Conditions:", font_size=36)
+        conditions_title.next_to(title, DOWN, buff=0.5)
+        self.play(Write(conditions_title))
+        
+        condition1 = MathTex(
+            r"|d_y| > \epsilon \quad \text{(not parallel)}",
+            font_size=32
+        )
+        condition1.next_to(conditions_title, DOWN, buff=0.4)
+        
+        condition2 = MathTex(
+            r"t \in [t_{min}, t_{max}] \quad \text{(in range)}",
+            font_size=32
+        )
+        condition2.next_to(condition1, DOWN, buff=0.3)
+        
+        self.play(Write(condition1))
+        self.play(Write(condition2))
+        self.wait(1.5)
+        
+        # Step 6: Hit point and normal
+        hit_info = VGroup(
+            MathTex(r"\text{Hit point: } \vec{p}(t)", font_size=36),
+            MathTex(r"\text{Normal: } \vec{n} = (0, 1, 0)", font_size=36)
+        )
+        hit_info.arrange(DOWN, buff=0.3)
+        hit_info.next_to(condition2, DOWN, buff=0.6)
+        
+        for eq in hit_info:
+            self.play(Write(eq))
+        self.wait(1)
+        
+        # Fade out conditions
+        self.play(
+            FadeOut(VGroup(conditions_title, condition1, condition2, hit_info)),
+            run_time=1
+        )
+        
+        # Step 7: Checkerboard pattern
+        checker_title = Text("Checkerboard Pattern", font_size=40)
+        checker_title.next_to(title, DOWN, buff=0.5)
+        self.play(Write(checker_title))
+        
+        # Checkerboard formula
+        checker_steps = VGroup(
+            MathTex(r"\text{1. Extract } (x, z) \text{ from hit point}", font_size=32),
+            MathTex(r"\text{2. Snap to integers: } i = \lfloor x \rfloor, \, j = \lfloor z \rfloor", font_size=32),
+            MathTex(r"\text{3. Color by parity: } (i + j) \bmod 2", font_size=32),
+        )
+        checker_steps.arrange(DOWN, buff=0.3)
+        checker_steps.next_to(checker_title, DOWN, buff=0.5)
+        
+        for step in checker_steps:
+            self.play(Write(step))
+            self.wait(0.5)
+        
+        # Parity visualization
+        parity_eq = MathTex(
+            r"\text{Color} = \begin{cases} \text{White} & \text{if } (i + j) \bmod 2 = 0 \\ \text{Black} & \text{if } (i + j) \bmod 2 = 1 \end{cases}",
+            font_size=30
+        )
+        parity_eq.next_to(checker_steps, DOWN, buff=0.5)
+        parity_eq.set_color(BLUE_C)
+        self.play(Write(parity_eq))
+        
+        self.wait(2)
+        
+        # Final fade out
+        self.play(
+            FadeOut(VGroup(title, checker_title, checker_steps, parity_eq)),
+            run_time=1
+        )
+        
+        # Summary animation
+        summary = VGroup(
+            MathTex(r"\vec{p}(t) = \vec{O} + t\vec{d}", font_size=40),
+            MathTex(r"t = -\frac{O_y}{d_y}", font_size=40),
+            MathTex(r"\text{Checkerboard: } (i + j) \bmod 2", font_size=40)
+        )
+        summary.arrange(DOWN, buff=0.5)
+        summary.move_to(ORIGIN)
+        
+        for eq in summary:
+            self.play(FadeIn(eq, scale=1.2))
+            self.wait(0.5)
+        
+        self.wait(2)
+        self.play(FadeOut(summary))
+
+
+class SimpleRayDiagram(Scene):
+    def construct(self):
+        # Set transparent background
+        self.camera.background_color = "#00000000"
+        
+        # Create a simple 2D side view
+        title = Text("Ray-Plane Intersection (Side View)", font_size=36)
+        title.to_edge(UP)
+        self.play(Write(title))
+        
+        # Draw the plane (as a line in 2D)
+        plane = Line(LEFT * 5, RIGHT * 5, color=BLUE, stroke_width=3)
+        plane.shift(DOWN * 2)
+        plane_label = MathTex("y = 0", font_size=24)
+        plane_label.next_to(plane, RIGHT, buff=0.2)
+        
+        self.play(Create(plane), Write(plane_label))
+        
+        # Draw the ray
+        origin = UP * 2 + LEFT * 2
+        direction = (DOWN * 3 + RIGHT * 3).normalize() * 4
+        ray_end = origin + direction
+        
+        ray = Arrow(origin, ray_end, color=YELLOW, buff=0)
+        ray_label = MathTex(r"\vec{p}(t)", font_size=24)
+        ray_label.next_to(ray.get_center(), LEFT, buff=0.2)
+        
+        # Origin point
+        o_dot = Dot(origin, color=RED)
+        o_label = MathTex(r"\vec{O}", font_size=24)
+        o_label.next_to(o_dot, UP, buff=0.2)
+        
+        self.play(
+            Create(ray),
+            Write(ray_label),
+            Create(o_dot),
+            Write(o_label)
+        )
+        
+        # Show intersection point
+        # Calculate intersection
+        t_intersect = (plane.get_center()[1] - origin[1]) / direction[1]
+        hit_point = origin + direction * t_intersect
+        
+        hit_dot = Dot(hit_point, color=GREEN, radius=0.1)
+        hit_label = MathTex(r"\vec{p}(t^*)", font_size=24)
+        hit_label.next_to(hit_dot, DOWN, buff=0.2)
+        
+        self.play(Create(hit_dot), Write(hit_label))
+        
+        # Show normal vector
+        normal = Arrow(hit_point, hit_point + UP, color=PURPLE, buff=0)
+        normal_label = MathTex(r"\vec{n} = (0, 1, 0)", font_size=24)
+        normal_label.next_to(normal, RIGHT, buff=0.2)
+        
+        self.play(Create(normal), Write(normal_label))
+        
+        # Show the t calculation
+        t_calc = MathTex(
+            r"t^* = -\frac{O_y}{d_y}",
+            font_size=32
+        )
+        t_calc.to_edge(LEFT).shift(DOWN * 0.5)
+        t_calc.set_color(YELLOW)
+        
+        self.play(Write(t_calc))
+        
+        self.wait(3)
+
+
+# To render with transparent background:
+# manim -qh main.py RayPlaneIntersection --transparent
+# or for both scenes:
+# manim -pql ray_plane_manim.py --transparent

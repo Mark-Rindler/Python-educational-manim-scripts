@@ -1,0 +1,842 @@
+from manim import *
+import numpy as np
+
+class Vec3Visualization(ThreeDScene):
+    def construct(self):
+        # Set up the 3D axes
+        axes = ThreeDAxes(
+            x_range=[-5, 5, 1],
+            y_range=[-5, 5, 1],
+            z_range=[-5, 5, 1],
+            x_length=8,
+            y_length=8,
+            z_length=8,
+        )
+        
+        # Add axis labels
+        x_label = axes.get_x_axis_label("x")
+        y_label = axes.get_y_axis_label("y")
+        z_label = axes.get_z_axis_label("z")
+        
+        # Define the vector components
+        vec_x, vec_y, vec_z = 3, 2, 4
+        vector_coords = np.array([vec_x, vec_y, vec_z])
+        
+        # Create the main vector
+        vector = Arrow3D(
+            start=axes.c2p(0, 0, 0),
+            end=axes.c2p(vec_x, vec_y, vec_z),
+            color=YELLOW,
+            thickness=0.03,
+        )
+        
+        # Create component vectors
+        x_component = Arrow3D(
+            start=axes.c2p(0, 0, 0),
+            end=axes.c2p(vec_x, 0, 0),
+            color=RED,
+            thickness=0.02,
+        )
+        
+        y_component = Arrow3D(
+            start=axes.c2p(vec_x, 0, 0),
+            end=axes.c2p(vec_x, vec_y, 0),
+            color=GREEN,
+            thickness=0.02,
+        )
+        
+        z_component = Arrow3D(
+            start=axes.c2p(vec_x, vec_y, 0),
+            end=axes.c2p(vec_x, vec_y, vec_z),
+            color=BLUE,
+            thickness=0.02,
+        )
+        
+        # Create projection lines (dashed)
+        proj_xy = DashedLine(
+            axes.c2p(0, 0, 0),
+            axes.c2p(vec_x, vec_y, 0),
+            color=GRAY,
+            dash_length=0.1,
+        )
+        
+        proj_x = DashedLine(
+            axes.c2p(vec_x, 0, 0),
+            axes.c2p(vec_x, vec_y, 0),
+            color=GRAY,
+            dash_length=0.1,
+        )
+        
+        proj_z = DashedLine(
+            axes.c2p(vec_x, vec_y, 0),
+            axes.c2p(vec_x, vec_y, vec_z),
+            color=GRAY,
+            dash_length=0.1,
+        )
+        
+        # Create labels for the vector
+        vector_label = MathTex(
+            r"\vec{v} = \begin{bmatrix} 3 \\ 2 \\ 4 \end{bmatrix}",
+            color=YELLOW
+        ).scale(0.8)
+        
+        magnitude_label = MathTex(
+            r"|\vec{v}| = \sqrt{3^2 + 2^2 + 4^2} = \sqrt{29} \approx 5.39",
+            color=WHITE
+        ).scale(0.7)
+        
+        # Component labels
+        x_comp_label = MathTex("x = 3", color=RED).scale(0.6)
+        y_comp_label = MathTex("y = 2", color=GREEN).scale(0.6)
+        z_comp_label = MathTex("z = 4", color=BLUE).scale(0.6)
+        
+        # Position labels in 3D space
+        vector_label.next_to(vector, UP + RIGHT)
+        x_comp_label.next_to(x_component, DOWN)
+        y_comp_label.next_to(y_component, RIGHT)
+        z_comp_label.next_to(z_component, UP)
+        
+        # Set camera orientation
+        self.set_camera_orientation(phi=60 * DEGREES, theta=-45 * DEGREES)
+        
+        # Animation sequence
+        self.play(Create(axes), Write(x_label), Write(y_label), Write(z_label))
+        self.wait(0.5)
+        
+        # Show the main vector
+        self.play(Create(vector), Write(vector_label))
+        self.wait(1)
+        
+        # Show components one by one
+        self.play(Create(x_component), Write(x_comp_label))
+        self.play(Create(proj_x))
+        self.wait(0.5)
+        
+        self.play(Create(y_component), Write(y_comp_label))
+        self.play(Create(proj_xy))
+        self.wait(0.5)
+        
+        self.play(Create(z_component), Write(z_comp_label))
+        self.play(Create(proj_z))
+        self.wait(1)
+        
+        # Show magnitude
+        magnitude_label.to_corner(UR)
+        self.add_fixed_in_frame_mobjects(magnitude_label)
+        self.play(Write(magnitude_label))
+        self.wait(1)
+        
+        # Rotate camera around the scene
+        self.begin_ambient_camera_rotation(rate=0.2)
+        self.wait(5)
+        self.stop_ambient_camera_rotation()
+        
+        # Final camera position
+        self.move_camera(phi=75 * DEGREES, theta=-30 * DEGREES)
+        self.wait(2)
+
+
+class AnimatedVec3(ThreeDScene):
+    def construct(self):
+        # Set up axes
+        axes = ThreeDAxes(
+            x_range=[-4, 4, 1],
+            y_range=[-4, 4, 1],
+            z_range=[-4, 4, 1],
+        )
+        
+        # Initial vector
+        start_vec = np.array([1, 1, 1])
+        end_vec = np.array([3, -2, 2])
+        
+        # Create vector that will be animated
+        vector = always_redraw(lambda: Arrow3D(
+            start=axes.c2p(0, 0, 0),
+            end=axes.c2p(*self.current_vec),
+            color=PURPLE,
+            thickness=0.03,
+        ))
+        
+        # Create a value tracker for smooth animation
+        self.current_vec = start_vec.copy()
+        
+        # Create dynamic label
+        vec_label = always_redraw(lambda: MathTex(
+            rf"\vec{{v}} = \begin{{bmatrix}} {self.current_vec[0]:.1f} \\ {self.current_vec[1]:.1f} \\ {self.current_vec[2]:.1f} \end{{bmatrix}}",
+            color=PURPLE
+        ).scale(0.8).to_corner(UL))
+        
+        # Set up camera
+        self.set_camera_orientation(phi=60 * DEGREES, theta=-45 * DEGREES)
+        
+        # Add objects to scene
+        self.add(axes)
+        self.add(vector)
+        self.add_fixed_in_frame_mobjects(vec_label)
+        
+        # Animate vector changing
+        self.play(Create(axes))
+        self.wait(0.5)
+        
+        # Smoothly interpolate between vectors
+        def update_vec(mob, alpha):
+            self.current_vec = start_vec + alpha * (end_vec - start_vec)
+        
+        dummy = VMobject()
+        self.play(
+            UpdateFromAlphaFunc(dummy, update_vec),
+            run_time=3
+        )
+        
+        self.wait(1)
+        
+        # Rotate the vector around z-axis
+        self.begin_ambient_camera_rotation(rate=0.3)
+        
+        def rotate_vec(mob, dt):
+            angle = dt * PI / 2
+            rotation_matrix = np.array([
+                [np.cos(angle), -np.sin(angle), 0],
+                [np.sin(angle), np.cos(angle), 0],
+                [0, 0, 1]
+            ])
+            self.current_vec = rotation_matrix @ self.current_vec
+        
+        vector.add_updater(lambda m, dt: rotate_vec(m, dt))
+        self.wait(4)
+        vector.clear_updaters()
+        
+        self.stop_ambient_camera_rotation()
+        self.wait(2)
+
+
+class Vec3Operations(ThreeDScene):
+    def construct(self):
+        axes = ThreeDAxes(
+            x_range=[-5, 5, 1],
+            y_range=[-5, 5, 1],
+            z_range=[-5, 5, 1],
+        )
+        
+        # Define two vectors
+        vec_a = np.array([2, 1, 3])
+        vec_b = np.array([1, 2, -1])
+        vec_sum = vec_a + vec_b
+        
+        # Create arrows for vectors
+        arrow_a = Arrow3D(
+            start=axes.c2p(0, 0, 0),
+            end=axes.c2p(*vec_a),
+            color=RED,
+            thickness=0.02,
+        )
+        
+        arrow_b = Arrow3D(
+            start=axes.c2p(*vec_a),
+            end=axes.c2p(*vec_sum),
+            color=BLUE,
+            thickness=0.02,
+        )
+        
+        arrow_sum = Arrow3D(
+            start=axes.c2p(0, 0, 0),
+            end=axes.c2p(*vec_sum),
+            color=GREEN,
+            thickness=0.03,
+        )
+        
+        # Labels
+        label_a = MathTex(r"\vec{a}", color=RED).scale(0.8)
+        label_b = MathTex(r"\vec{b}", color=BLUE).scale(0.8)
+        label_sum = MathTex(r"\vec{a} + \vec{b}", color=GREEN).scale(0.8)
+        
+        # Position labels
+        label_a.next_to(arrow_a.get_center(), UP)
+        label_b.next_to(arrow_b.get_center(), UP)
+        label_sum.next_to(arrow_sum.get_center(), DOWN)
+        
+        # Operation text
+        operation_text = MathTex(
+            r"\vec{a} = \begin{bmatrix} 2 \\ 1 \\ 3 \end{bmatrix}, \quad",
+            r"\vec{b} = \begin{bmatrix} 1 \\ 2 \\ -1 \end{bmatrix}, \quad",
+            r"\vec{a} + \vec{b} = \begin{bmatrix} 3 \\ 3 \\ 2 \end{bmatrix}"
+        ).scale(0.6).to_corner(UR)
+        
+        # Set camera
+        self.set_camera_orientation(phi=60 * DEGREES, theta=-45 * DEGREES)
+        
+        # Animate
+        self.play(Create(axes))
+        self.add_fixed_in_frame_mobjects(operation_text)
+        self.play(Write(operation_text))
+        
+        self.play(Create(arrow_a), Write(label_a))
+        self.wait(0.5)
+        
+        self.play(Create(arrow_b), Write(label_b))
+        self.wait(0.5)
+        
+        self.play(Create(arrow_sum), Write(label_sum))
+        self.wait(1)
+        
+        # Show parallelogram
+        parallelogram = Polygon(
+            axes.c2p(0, 0, 0),
+            axes.c2p(*vec_a),
+            axes.c2p(*vec_sum),
+            axes.c2p(*vec_b),
+            color=YELLOW,
+            fill_opacity=0.3,
+        )
+        
+        self.play(Create(parallelogram))
+        self.wait(1)
+        
+        # Rotate view
+        self.begin_ambient_camera_rotation(rate=0.2)
+        self.wait(4)
+        self.stop_ambient_camera_rotation()
+        self.wait(2)
+
+
+class DotProductVisualization(ThreeDScene):
+    def construct(self):
+        axes = ThreeDAxes(
+            x_range=[-4, 4, 1],
+            y_range=[-4, 4, 1],
+            z_range=[-4, 4, 1],
+        )
+        
+        # Define two vectors
+        vec_a = np.array([3, 1, 0.5])
+        vec_b = np.array([1, 3, 1])
+        
+        # Calculate dot product
+        dot_product = np.dot(vec_a, vec_b)
+        magnitude_a = np.linalg.norm(vec_a)
+        magnitude_b = np.linalg.norm(vec_b)
+        angle = np.arccos(dot_product / (magnitude_a * magnitude_b))
+        
+        # Create arrows
+        arrow_a = Arrow3D(
+            start=axes.c2p(0, 0, 0),
+            end=axes.c2p(*vec_a),
+            color=RED,
+            thickness=0.03,
+        )
+        
+        arrow_b = Arrow3D(
+            start=axes.c2p(0, 0, 0),
+            end=axes.c2p(*vec_b),
+            color=BLUE,
+            thickness=0.03,
+        )
+        
+        # Create projection of b onto a
+        proj_scalar = dot_product / (magnitude_a ** 2)
+        proj_vec = proj_scalar * vec_a
+        
+        arrow_proj = Arrow3D(
+            start=axes.c2p(0, 0, 0),
+            end=axes.c2p(*proj_vec),
+            color=GREEN,
+            thickness=0.02,
+        )
+        
+        # Perpendicular line from b to projection
+        perp_line = DashedLine(
+            axes.c2p(*vec_b),
+            axes.c2p(*proj_vec),
+            color=GRAY,
+            dash_length=0.1,
+        )
+        
+        # Create angle indicator with lines instead of arc
+        # Small lines to show the angle
+        angle_line1 = Line(
+            axes.c2p(0, 0, 0),
+            axes.c2p(*(vec_a / magnitude_a * 0.5)),
+            color=YELLOW,
+            stroke_width=2,
+        )
+        angle_line2 = Line(
+            axes.c2p(0, 0, 0),
+            axes.c2p(*(vec_b / magnitude_b * 0.5)),
+            color=YELLOW,
+            stroke_width=2,
+        )
+        
+        # Angle label
+        angle_label = MathTex(rf"\theta = {np.degrees(angle):.1f}°", color=YELLOW).scale(0.6)
+        angle_label.move_to(axes.c2p(0.7, 0.7, 0.3))
+        
+        # Labels
+        label_a = MathTex(r"\vec{a}", color=RED).scale(0.8)
+        label_b = MathTex(r"\vec{b}", color=BLUE).scale(0.8)
+        label_proj = MathTex(r"\text{proj}_{\vec{a}}\vec{b}", color=GREEN).scale(0.7)
+        
+        label_a.next_to(arrow_a.get_end(), RIGHT)
+        label_b.next_to(arrow_b.get_end(), UP)
+        label_proj.next_to(arrow_proj.get_end(), DOWN)
+        
+        # Formulas
+        formula = MathTex(
+            r"\vec{a} \cdot \vec{b} = |\vec{a}||\vec{b}|\cos\theta"
+        ).scale(0.7).to_corner(UL)
+        
+        calculation = MathTex(
+            rf"\vec{{a}} \cdot \vec{{b}} = {dot_product:.2f}",
+            rf"\quad \theta = {np.degrees(angle):.1f}°"
+        ).scale(0.6).next_to(formula, DOWN)
+        
+        components = MathTex(
+            r"\vec{a} \cdot \vec{b} = a_x b_x + a_y b_y + a_z b_z",
+            rf"= (3)(1) + (1)(3) + (0.5)(1) = {dot_product:.1f}"
+        ).scale(0.5).to_corner(UR)
+        
+        # Set camera
+        self.set_camera_orientation(phi=60 * DEGREES, theta=-45 * DEGREES)
+        
+        # Animation
+        self.play(Create(axes))
+        self.wait(0.5)
+        
+        self.play(Create(arrow_a), Write(label_a))
+        self.play(Create(arrow_b), Write(label_b))
+        self.wait(1)
+        
+        # Show angle
+        self.play(Create(angle_line1), Create(angle_line2))
+        self.play(Write(angle_label))
+        
+        # Show formulas
+        self.add_fixed_in_frame_mobjects(formula, calculation, components)
+        self.play(Write(formula))
+        self.play(Write(calculation))
+        self.play(Write(components))
+        self.wait(1)
+        
+        # Show projection
+        self.play(Create(arrow_proj), Write(label_proj))
+        self.play(Create(perp_line))
+        self.wait(1)
+        
+        # Rotate view
+        self.begin_ambient_camera_rotation(rate=0.2)
+        self.wait(4)
+        self.stop_ambient_camera_rotation()
+        self.wait(2)
+
+
+class CrossProductVisualization(ThreeDScene):
+    def construct(self):
+        axes = ThreeDAxes(
+            x_range=[-5, 5, 1],
+            y_range=[-5, 5, 1],
+            z_range=[-5, 5, 1],
+        )
+        
+        # Define two vectors
+        vec_a = np.array([2, 1, 0])
+        vec_b = np.array([1, 2, 0])
+        
+        # Calculate cross product
+        vec_cross = np.cross(vec_a, vec_b)
+        
+        # Create arrows
+        arrow_a = Arrow3D(
+            start=axes.c2p(0, 0, 0),
+            end=axes.c2p(*vec_a),
+            color=RED,
+            thickness=0.03,
+        )
+        
+        arrow_b = Arrow3D(
+            start=axes.c2p(0, 0, 0),
+            end=axes.c2p(*vec_b),
+            color=BLUE,
+            thickness=0.03,
+        )
+        
+        arrow_cross = Arrow3D(
+            start=axes.c2p(0, 0, 0),
+            end=axes.c2p(*vec_cross),
+            color=PURPLE,
+            thickness=0.04,
+        )
+        
+        # Create parallelogram
+        parallelogram = Polygon(
+            axes.c2p(0, 0, 0),
+            axes.c2p(*vec_a),
+            axes.c2p(*(vec_a + vec_b)),
+            axes.c2p(*vec_b),
+            color=YELLOW,
+            fill_opacity=0.3,
+            stroke_width=2,
+        )
+        
+        # Right-hand rule illustration (curved arrow)
+        curve = ParametricFunction(
+            lambda t: axes.c2p(
+                1.5 * np.cos(t),
+                1.5 * np.sin(t),
+                0.5 * t / (2 * PI)
+            ),
+            t_range=[0, 2 * PI],
+            color=ORANGE,
+        )
+        
+        # Labels
+        label_a = MathTex(r"\vec{a}", color=RED).scale(0.8)
+        label_b = MathTex(r"\vec{b}", color=BLUE).scale(0.8)
+        label_cross = MathTex(r"\vec{a} \times \vec{b}", color=PURPLE).scale(0.8)
+        
+        label_a.next_to(arrow_a.get_end(), RIGHT)
+        label_b.next_to(arrow_b.get_end(), UP)
+        label_cross.next_to(arrow_cross.get_end(), UP)
+        
+        # Formulas
+        formula = MathTex(
+            r"|\vec{a} \times \vec{b}| = |\vec{a}||\vec{b}|\sin\theta"
+        ).scale(0.7).to_corner(UL)
+        
+        calculation = MathTex(
+            r"\vec{a} \times \vec{b} = \begin{vmatrix} \vec{i} & \vec{j} & \vec{k} \\ 2 & 1 & 0 \\ 1 & 2 & 0 \end{vmatrix}"
+        ).scale(0.6).next_to(formula, DOWN)
+        
+        result = MathTex(
+            rf"\vec{{a}} \times \vec{{b}} = \begin{{bmatrix}} 0 \\ 0 \\ 3 \end{{bmatrix}}",
+            r"\quad \text{Area} = 3"
+        ).scale(0.6).to_corner(UR)
+        
+        right_hand_label = Text("Right-hand rule", color=ORANGE).scale(0.5)
+        right_hand_label.next_to(curve, RIGHT)
+        
+        # Set camera
+        self.set_camera_orientation(phi=60 * DEGREES, theta=-45 * DEGREES)
+        
+        # Animation
+        self.play(Create(axes))
+        self.wait(0.5)
+        
+        self.play(Create(arrow_a), Write(label_a))
+        self.play(Create(arrow_b), Write(label_b))
+        self.wait(1)
+        
+        # Show parallelogram
+        self.play(Create(parallelogram))
+        self.wait(0.5)
+        
+        # Show cross product
+        self.play(Create(arrow_cross), Write(label_cross))
+        self.wait(1)
+        
+        # Show formulas
+        self.add_fixed_in_frame_mobjects(formula, calculation, result)
+        self.play(Write(formula))
+        self.play(Write(calculation))
+        self.play(Write(result))
+        self.wait(1)
+        
+        # Show right-hand rule
+        self.play(Create(curve), Write(right_hand_label))
+        self.wait(1)
+        
+        # Rotate to show perpendicularity
+        self.begin_ambient_camera_rotation(rate=0.2)
+        self.wait(5)
+        self.stop_ambient_camera_rotation()
+        
+        # Move camera to show from top
+        self.move_camera(phi=0 * DEGREES, theta=0 * DEGREES)
+        self.wait(2)
+        
+        # Reset camera
+        self.move_camera(phi=60 * DEGREES, theta=-45 * DEGREES)
+        self.wait(2)
+
+
+class NormalizeVisualization(ThreeDScene):
+    def construct(self):
+        axes = ThreeDAxes(
+            x_range=[-5, 5, 1],
+            y_range=[-5, 5, 1],
+            z_range=[-5, 5, 1],
+        )
+        
+        # Original vector
+        vec_original = np.array([3, 2, 4])
+        magnitude = np.linalg.norm(vec_original)
+        vec_normalized = vec_original / magnitude
+        
+        # Create arrows
+        arrow_original = Arrow3D(
+            start=axes.c2p(0, 0, 0),
+            end=axes.c2p(*vec_original),
+            color=YELLOW,
+            thickness=0.03,
+        )
+        
+        arrow_normalized = Arrow3D(
+            start=axes.c2p(0, 0, 0),
+            end=axes.c2p(*vec_normalized),
+            color=GREEN,
+            thickness=0.04,
+        )
+        
+        # Unit sphere
+        sphere = Sphere(
+            center=axes.c2p(0, 0, 0),
+            radius=1,
+            resolution=(20, 20),
+            fill_opacity=0.1,
+            stroke_width=0.5,
+            stroke_color=WHITE,
+        )
+        
+        # Create intermediate arrows for animation
+        intermediate_arrows = []
+        for i, t in enumerate(np.linspace(0, 1, 10)):
+            scale = magnitude * (1 - t) + 1 * t
+            vec_inter = vec_original / scale
+            # Simple color transition
+            if t < 0.5:
+                color_inter = YELLOW
+            else:
+                color_inter = GREEN
+            arrow_inter = Arrow3D(
+                start=axes.c2p(0, 0, 0),
+                end=axes.c2p(*vec_inter),
+                color=color_inter,
+                thickness=0.03,
+            )
+            intermediate_arrows.append(arrow_inter)
+        
+        # Labels
+        label_original = MathTex(
+            rf"\vec{{v}} = \begin{{bmatrix}} 3 \\ 2 \\ 4 \end{{bmatrix}}",
+            color=YELLOW
+        ).scale(0.7)
+        
+        label_normalized = MathTex(
+            r"\hat{v} = \frac{\vec{v}}{|\vec{v}|}",
+            color=GREEN
+        ).scale(0.7)
+        
+        label_original.next_to(arrow_original.get_end(), RIGHT)
+        label_normalized.next_to(arrow_normalized.get_end(), LEFT)
+        
+        # Formulas
+        formula_magnitude = MathTex(
+            rf"|\vec{{v}}| = \sqrt{{3^2 + 2^2 + 4^2}} = \sqrt{{29}} \approx {magnitude:.2f}"
+        ).scale(0.6).to_corner(UL)
+        
+        formula_normalized = MathTex(
+            rf"\hat{{v}} = \frac{{1}}{{{magnitude:.2f}}} \begin{{bmatrix}} 3 \\ 2 \\ 4 \end{{bmatrix}} \approx \begin{{bmatrix}} {vec_normalized[0]:.2f} \\ {vec_normalized[1]:.2f} \\ {vec_normalized[2]:.2f} \end{{bmatrix}}"
+        ).scale(0.6).next_to(formula_magnitude, DOWN)
+        
+        unit_length = MathTex(
+            r"|\hat{v}| = 1",
+            color=GREEN
+        ).scale(0.7).to_corner(UR)
+        
+        # Set camera
+        self.set_camera_orientation(phi=60 * DEGREES, theta=-45 * DEGREES)
+        
+        # Animation
+        self.play(Create(axes))
+        self.wait(0.5)
+        
+        # Show unit sphere
+        self.play(Create(sphere))
+        self.wait(0.5)
+        
+        # Show original vector
+        self.play(Create(arrow_original), Write(label_original))
+        self.add_fixed_in_frame_mobjects(formula_magnitude)
+        self.play(Write(formula_magnitude))
+        self.wait(1)
+        
+        # Animate normalization
+        self.add_fixed_in_frame_mobjects(formula_normalized)
+        self.play(Write(formula_normalized))
+        
+        # Smooth transition from original to normalized
+        for i in range(len(intermediate_arrows) - 1):
+            if i == 0:
+                self.play(Transform(arrow_original, intermediate_arrows[i], run_time=0.3))
+            else:
+                self.play(Transform(arrow_original, intermediate_arrows[i], run_time=0.3))
+        
+        # Final normalized vector
+        self.play(Transform(arrow_original, arrow_normalized))
+        self.play(Write(label_normalized))
+        self.add_fixed_in_frame_mobjects(unit_length)
+        self.play(Write(unit_length))
+        self.wait(1)
+        
+        # Rotate to show unit length
+        self.begin_ambient_camera_rotation(rate=0.2)
+        self.wait(4)
+        self.stop_ambient_camera_rotation()
+        self.wait(2)
+
+
+class ReflectionVisualization(ThreeDScene):
+    def construct(self):
+        axes = ThreeDAxes(
+            x_range=[-5, 5, 1],
+            y_range=[-5, 5, 1],
+            z_range=[-5, 5, 1],
+        )
+        
+        # Define the reflection plane (xy-plane for simplicity)
+        plane = Rectangle(
+            width=8,
+            height=8,
+            color=BLUE,
+            fill_opacity=0.2,
+            stroke_width=2,
+        ).move_to(axes.c2p(0, 0, 0))
+        
+        # Define normal to the plane
+        normal = np.array([0, 0, 1])
+        
+        # Original vector
+        vec_original = np.array([2, 1, 3])
+        
+        # Calculate reflection: v' = v - 2(v·n)n
+        dot_vn = np.dot(vec_original, normal)
+        vec_reflected = vec_original - 2 * dot_vn * normal
+        
+        # Create arrows
+        arrow_original = Arrow3D(
+            start=axes.c2p(0, 0, 0),
+            end=axes.c2p(*vec_original),
+            color=RED,
+            thickness=0.03,
+        )
+        
+        arrow_reflected = Arrow3D(
+            start=axes.c2p(0, 0, 0),
+            end=axes.c2p(*vec_reflected),
+            color=GREEN,
+            thickness=0.03,
+        )
+        
+        arrow_normal = Arrow3D(
+            start=axes.c2p(0, 0, 0),
+            end=axes.c2p(*normal),
+            color=YELLOW,
+            thickness=0.02,
+        )
+        
+        # Projection onto normal
+        proj_vec = dot_vn * normal
+        arrow_proj = Arrow3D(
+            start=axes.c2p(0, 0, 0),
+            end=axes.c2p(*proj_vec),
+            color=ORANGE,
+            thickness=0.02,
+        )
+        
+        # Dashed lines to show reflection symmetry
+        dashed_to_plane = DashedLine(
+            axes.c2p(*vec_original),
+            axes.c2p(vec_original[0], vec_original[1], 0),
+            color=GRAY,
+            dash_length=0.1,
+        )
+        
+        dashed_from_plane = DashedLine(
+            axes.c2p(vec_original[0], vec_original[1], 0),
+            axes.c2p(*vec_reflected),
+            color=GRAY,
+            dash_length=0.1,
+        )
+        
+        # Labels
+        label_original = MathTex(r"\vec{v}", color=RED).scale(0.8)
+        label_reflected = MathTex(r"\vec{v}'", color=GREEN).scale(0.8)
+        label_normal = MathTex(r"\vec{n}", color=YELLOW).scale(0.7)
+        label_plane = Text("Reflection Plane", color=BLUE).scale(0.5)
+        
+        label_original.next_to(arrow_original.get_end(), RIGHT)
+        label_reflected.next_to(arrow_reflected.get_end(), RIGHT)
+        label_normal.next_to(arrow_normal.get_end(), UP)
+        label_plane.next_to(plane, DOWN + RIGHT)
+        
+        # Formulas
+        formula = MathTex(
+            r"\vec{v}' = \vec{v} - 2(\vec{v} \cdot \vec{n})\vec{n}"
+        ).scale(0.7).to_corner(UL)
+        
+        calculation = MathTex(
+            rf"\vec{{v}} \cdot \vec{{n}} = {dot_vn:.1f}"
+        ).scale(0.6).next_to(formula, DOWN)
+        
+        result = MathTex(
+            rf"\vec{{v}}' = \begin{{bmatrix}} 2 \\ 1 \\ 3 \end{{bmatrix}} - 2(3)\begin{{bmatrix}} 0 \\ 0 \\ 1 \end{{bmatrix}} = \begin{{bmatrix}} 2 \\ 1 \\ -3 \end{{bmatrix}}"
+        ).scale(0.5).to_corner(UR)
+        
+        # Set camera
+        self.set_camera_orientation(phi=60 * DEGREES, theta=-45 * DEGREES)
+        
+        # Animation
+        self.play(Create(axes))
+        self.wait(0.5)
+        
+        # Show plane and normal
+        self.play(Create(plane), Write(label_plane))
+        self.play(Create(arrow_normal), Write(label_normal))
+        self.wait(1)
+        
+        # Show original vector
+        self.play(Create(arrow_original), Write(label_original))
+        self.wait(0.5)
+        
+        # Show formula
+        self.add_fixed_in_frame_mobjects(formula, calculation)
+        self.play(Write(formula))
+        self.play(Write(calculation))
+        self.wait(1)
+        
+        # Show projection
+        self.play(Create(arrow_proj))
+        self.play(Create(dashed_to_plane))
+        self.wait(0.5)
+        
+        # Show reflection
+        self.play(Create(dashed_from_plane))
+        self.play(Create(arrow_reflected), Write(label_reflected))
+        
+        self.add_fixed_in_frame_mobjects(result)
+        self.play(Write(result))
+        self.wait(1)
+        
+        # Rotate to show reflection symmetry
+        self.begin_ambient_camera_rotation(rate=0.2)
+        self.wait(5)
+        self.stop_ambient_camera_rotation()
+        
+        # View from side to show symmetry
+        self.move_camera(phi=90 * DEGREES, theta=0 * DEGREES)
+        self.wait(2)
+        
+        # Reset view
+        self.move_camera(phi=60 * DEGREES, theta=-45 * DEGREES)
+        self.wait(2)
+
+
+# To render these scenes, use one of the following commands:
+# manim -pql main.py Vec3Visualization
+# manim -pql main.py AnimatedVec3
+# manim -pql main.py Vec3Operations
+# manim -pql main.py DotProductVisualization
+# manim -pql main.py CrossProductVisualization
+# manim -pql main.py NormalizeVisualization
+# manim -pql main.py ReflectionVisualization
+# 
+# For higher quality: replace -pql with -pqh
+# For 4K quality: replace -pql with -pqk
